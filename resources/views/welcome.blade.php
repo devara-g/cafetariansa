@@ -1178,34 +1178,60 @@
 
     <!-- Notification Bottom Sheet Modal (Clean White Card) -->
     <div class="dock-sheet-backdrop" id="notifSheetBackdrop" onclick="closeNotificationsSheet()"></div>
-    <div class="dock-sheet" id="notifSheet">
-      <div class="dock-sheet-header">
+    <div class="dock-sheet" id="notifSheet" style="max-height:85vh; display:flex; flex-direction:column;">
+      <div class="dock-sheet-header" style="flex-shrink:0;">
         <h3 class="dock-sheet-title">
           <ion-icon name="receipt-outline" style="color: #ff9d2d; font-size: 2.2rem;"></ion-icon>
-          <span>Status Pesanan & Info Kantin</span>
+          <span>Rekap & Status Pesanan</span>
         </h3>
         <button class="dock-sheet-close" onclick="closeNotificationsSheet()" aria-label="Tutup">&times;</button>
       </div>
-      <div class="dock-sheet-item">
-        <div class="dock-sheet-item-title">
-          <span class="sheet-status-indicator online"></span>
-          <span>Kantin Beroperasi Normal</span>
-        </div>
-        <div class="dock-sheet-item-text">Kantin SMKN 1 Ciomas melayani jam istirahat sekolah (06:30 - 16:00 WIB). Pesan lebih awal agar siap saat bel istirahat berbunyi!</div>
+
+      <!-- Tab Switcher -->
+      <div style="display:flex; gap:8px; padding:0 20px 14px 20px; border-bottom:1px solid #f1f5f9; flex-shrink:0;">
+        <button type="button" id="tabBtnMyOrders" onclick="switchOrdersSheetTab('orders')" style="flex:1; padding:8px 12px; border-radius:10px; font-weight:600; font-size:1.3rem; border:none; background:var(--deep-saffron); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <ion-icon name="bag-check-outline"></ion-icon>
+          <span>Pesanan Saya</span>
+          <span id="myOrdersCountBadge" style="background:rgba(255,255,255,0.3); padding:1px 6px; border-radius:10px; font-size:1.1rem;">0</span>
+        </button>
+        <button type="button" id="tabBtnCanteenInfo" onclick="switchOrdersSheetTab('info')" style="flex:1; padding:8px 12px; border-radius:10px; font-weight:600; font-size:1.3rem; border:none; background:#f1f5f9; color:#64748b; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>Info Kantin</span>
+        </button>
       </div>
-      <div class="dock-sheet-item">
-        <div class="dock-sheet-item-title">
-          <ion-icon name="flame-outline" style="color:#ea580c; font-size:1.8rem;"></ion-icon>
-          <span>Rekomendasi Menu Hari Ini</span>
+
+      <div style="overflow-y:auto; flex:1; padding:14px 0;">
+        <!-- TAB 1: PESANAN SAYA -->
+        <div id="tabContentMyOrders">
+          <div id="recentOrdersListContainer" style="display:flex; flex-direction:column; gap:12px; padding:0 20px;">
+            <!-- Populated dynamically by script.js -->
+          </div>
         </div>
-        <div class="dock-sheet-item-text">Ayam Crispy Sambal Bawang + Nasi Hangat dan Es Jeruk Peras Segar tersedia di Stand Utama.</div>
-      </div>
-      <div class="dock-sheet-item">
-        <div class="dock-sheet-item-title">
-          <ion-icon name="paper-plane-outline" style="color:#2563eb; font-size:1.8rem;"></ion-icon>
-          <span>Layanan Antar ke Ruang Guru / Staf</span>
+
+        <!-- TAB 2: INFO KANTIN -->
+        <div id="tabContentCanteenInfo" style="display:none; padding:0 20px; flex-direction:column; gap:10px;">
+          <div class="dock-sheet-item">
+            <div class="dock-sheet-item-title">
+              <span class="sheet-status-indicator online"></span>
+              <span>Kantin Beroperasi Normal</span>
+            </div>
+            <div class="dock-sheet-item-text">Kantin SMKN 1 Ciomas melayani jam istirahat sekolah (06:30 - 16:00 WIB). Pesan lebih awal agar siap saat bel istirahat berbunyi!</div>
+          </div>
+          <div class="dock-sheet-item">
+            <div class="dock-sheet-item-title">
+              <ion-icon name="flame-outline" style="color:#ea580c; font-size:1.8rem;"></ion-icon>
+              <span>Rekomendasi Menu Hari Ini</span>
+            </div>
+            <div class="dock-sheet-item-text">Ayam Crispy Sambal Bawang + Nasi Hangat dan Es Jeruk Peras Segar tersedia di Stand Utama.</div>
+          </div>
+          <div class="dock-sheet-item">
+            <div class="dock-sheet-item-title">
+              <ion-icon name="paper-plane-outline" style="color:#2563eb; font-size:1.8rem;"></ion-icon>
+              <span>Layanan Antar ke Ruang Guru / Staf</span>
+            </div>
+            <div class="dock-sheet-item-text">Bapak/Ibu guru dan staf tata usaha dapat memesan konsumsi rapat langsung melalui layanan pesan antar kantin.</div>
+          </div>
         </div>
-        <div class="dock-sheet-item-text">Bapak/Ibu guru dan staf tata usaha dapat memesan konsumsi rapat langsung melalui layanan pesan antar kantin.</div>
       </div>
     </div>
 
@@ -1496,15 +1522,16 @@
     - #ORDER SUCCESS MODAL (RECEIPT / CONFIRMATION)
   -->
   <div class="order-success-modal-backdrop" id="orderSuccessBackdrop" onclick="if(event.target===this) closeOrderSuccessModal()">
-    <div class="order-success-card" role="dialog" aria-modal="true">
+    <div class="order-success-card" role="dialog" aria-modal="true" style="max-height:90vh; overflow-y:auto;">
       <div style="width:68px; height:68px; border-radius:50%; background:#dcfce7; color:#16a34a; font-size:3.6rem; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
         <ion-icon name="checkmark-done-outline"></ion-icon>
       </div>
 
-      <h3 style="font-size:2rem; font-weight:700; color:#0f172a; margin-bottom:6px;">Pesanan Berhasil Dibuat!</h3>
-      <p style="font-size:1.35rem; color:#64748b; margin-bottom:18px;">Pesananmu telah tercatat di sistem Kantin SMKN 1 Ciomas.</p>
+      <h3 style="font-size:2rem; font-weight:700; color:#0f172a; margin-bottom:6px;" id="successModalTitle">Pesanan Berhasil Dibuat!</h3>
+      <p style="font-size:1.35rem; color:#64748b; margin-bottom:18px;" id="successModalDesc">Pesananmu telah tercatat di sistem Kantin SMKN 1 Ciomas.</p>
 
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:18px; text-align:left; margin-bottom:18px;">
+      <!-- METADATA PEMESAN -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:16px; text-align:left; margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
           <span style="font-size:1.25rem; color:#64748b;">Kode Pesanan:</span>
           <strong id="successOrderNumber" style="font-size:1.5rem; color:var(--deep-saffron); font-family:monospace; background:#fff7ed; padding:3px 8px; border-radius:6px;">SKN-0000</strong>
@@ -1525,9 +1552,42 @@
           <span style="color:#64748b;">Metode Bayar:</span>
           <span id="successPaymentMethod" style="color:#0f172a; font-weight:600; text-transform:uppercase;">-</span>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:1.45rem; font-weight:700; margin-top:10px; border-top:1px dashed #cbd5e1; padding-top:8px;">
-          <span style="color:#0f172a;">Total Pembayaran:</span>
-          <span id="successTotalAmount" style="color:var(--cinnabar);">Rp 0</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:1.3rem;">
+          <span style="color:#64748b;">Status Bayar:</span>
+          <span id="successPaymentStatusBadge" style="font-size:1.2rem; font-weight:700; padding:2px 10px; border-radius:20px; background:#dcfce7; color:#15803d;">LUNAS</span>
+        </div>
+      </div>
+
+      <!-- REKAP MENU PESANAN -->
+      <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:16px; text-align:left; margin-bottom:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+          <span style="font-size:1.35rem; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px;">
+            <ion-icon name="receipt-outline" style="color:var(--deep-saffron); font-size:1.8rem;"></ion-icon>
+            <span>Rekap Pesanan (<span id="successItemCount">0</span> menu)</span>
+          </span>
+          <span style="font-size:1.15rem; color:#64748b; font-weight:500;">Rincian Item</span>
+        </div>
+
+        <div id="successOrderItemsList" style="display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto; padding-right:4px;">
+          <!-- Item list rendered dynamically -->
+        </div>
+
+        <div style="border-top:1px dashed #cbd5e1; margin-top:12px; padding-top:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:1.25rem; color:#64748b; margin-bottom:4px;">
+            <span>Subtotal Menu:</span>
+            <span id="successSubtotal" style="color:#0f172a; font-weight:600;">Rp 0</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:1.25rem; color:#64748b; margin-bottom:6px;">
+            <span>Biaya Layanan Kantin:</span>
+            <span id="successServiceFee" style="color:#0f172a; font-weight:600;">Rp 500</span>
+          </div>
+          <div id="successNotesRow" style="display:none; font-size:1.2rem; background:#fffbeb; color:#b45309; padding:6px 10px; border-radius:8px; margin-bottom:8px;">
+            <strong>Catatan:</strong> <span id="successOrderNotes">-</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:1.5rem; font-weight:700; border-top:1px solid #f1f5f9; padding-top:8px;">
+            <span style="color:#0f172a;">Total Pembayaran:</span>
+            <span id="successTotalAmount" style="color:var(--cinnabar);">Rp 0</span>
+          </div>
         </div>
       </div>
 
@@ -1541,6 +1601,11 @@
           <ion-icon name="logo-whatsapp" style="font-size:2rem;"></ion-icon>
           <span>Kirim Bukti Pesanan via WhatsApp</span>
         </a>
+
+        <button type="button" class="btn" onclick="closeOrderSuccessModal(); openNotificationsSheet();" style="background:#e0f2fe; color:#0284c7; border-radius:50px; font-weight:600; padding:10px; display:flex; align-items:center; justify-content:center; gap:6px;">
+          <ion-icon name="receipt-outline"></ion-icon>
+          <span>Lihat di Riwayat Pesanan Saya</span>
+        </button>
 
         <button type="button" class="btn" onclick="closeOrderSuccessModal()" style="background:#f1f5f9; color:#475569; border-radius:50px; font-weight:600; padding:10px;">
           Selesai & Lanjut Belanja

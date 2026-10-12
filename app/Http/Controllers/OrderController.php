@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -97,6 +98,8 @@ class OrderController extends Controller
                 $snapData = $this->midtransService->createSnapTransaction($order, $payment);
             }
 
+            $order->loadMissing('items.stand');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dibuat!',
@@ -108,15 +111,93 @@ class OrderController extends Controller
                     'delivery_location' => $order->delivery_location,
                     'total_amount' => $order->total_amount,
                     'formatted_total' => 'Rp '.number_format($order->total_amount, 0, ',', '.'),
+                    'subtotal' => $order->subtotal,
+                    'formatted_subtotal' => 'Rp '.number_format($order->subtotal, 0, ',', '.'),
+                    'service_fee' => $order->service_fee,
+                    'formatted_service_fee' => 'Rp '.number_format($order->service_fee, 0, ',', '.'),
+                    'notes' => $order->notes,
                     'order_status' => $order->order_status,
                     'payment_method' => $payment->payment_method,
                     'payment_reference' => $payment->payment_reference,
                     'snap_token' => $snapData['snap_token'] ?? null,
                     'redirect_url' => $snapData['redirect_url'] ?? null,
                     'client_key' => $this->midtransService->getClientKey(),
+                    'items' => $order->items->map(fn ($item) => [
+                        'menu_id' => $item->menu_id,
+                        'menu_name' => $item->menu_name,
+                        'stand_name' => $item->stand?->name ?? 'Stand Kantin',
+                        'unit_price' => (int) $item->unit_price,
+                        'quantity' => (int) $item->quantity,
+                        'subtotal' => (int) $item->subtotal,
+                        'formatted_price' => 'Rp '.number_format($item->unit_price, 0, ',', '.'),
+                        'formatted_subtotal' => 'Rp '.number_format($item->subtotal, 0, ',', '.'),
+                        'notes' => $item->notes,
+                    ]),
                 ],
             ], 201);
         });
+    }
+
+    /**
+     * Mark an order as paid after frontend Midtrans Snap success or manual confirmation.
+     */
+    public function confirmPayment(Request $request, string $orderNumber): JsonResponse
+    {
+        $order = Order::with(['items.stand', 'payments'])
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+
+        $payment = $order->payments()->latest()->first();
+
+        if ($payment && $payment->status !== 'paid') {
+            $payment->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+                'gateway_response' => array_merge((array) ($payment->gateway_response ?? []), [
+                    'frontend_result' => $request->all(),
+                    'confirmed_at' => now()->toIso8601String(),
+                ]),
+            ]);
+        }
+
+        if ($order->order_status !== 'confirmed') {
+            $order->update([
+                'order_status' => 'confirmed',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran berhasil dikonfirmasi!',
+            'data' => [
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer_name,
+                'pickup_time_slot' => $order->pickup_time_slot,
+                'pickup_type' => $order->pickup_type,
+                'delivery_location' => $order->delivery_location,
+                'total_amount' => $order->total_amount,
+                'formatted_total' => 'Rp '.number_format($order->total_amount, 0, ',', '.'),
+                'subtotal' => $order->subtotal,
+                'formatted_subtotal' => 'Rp '.number_format($order->subtotal, 0, ',', '.'),
+                'service_fee' => $order->service_fee,
+                'formatted_service_fee' => 'Rp '.number_format($order->service_fee, 0, ',', '.'),
+                'notes' => $order->notes,
+                'order_status' => $order->order_status,
+                'payment_method' => $payment?->payment_method ?? 'qris',
+                'payment_status' => $payment?->status ?? 'paid',
+                'items' => $order->items->map(fn ($item) => [
+                    'menu_id' => $item->menu_id,
+                    'menu_name' => $item->menu_name,
+                    'stand_name' => $item->stand?->name ?? 'Stand Kantin',
+                    'unit_price' => (int) $item->unit_price,
+                    'quantity' => (int) $item->quantity,
+                    'subtotal' => (int) $item->subtotal,
+                    'formatted_price' => 'Rp '.number_format($item->unit_price, 0, ',', '.'),
+                    'formatted_subtotal' => 'Rp '.number_format($item->subtotal, 0, ',', '.'),
+                    'notes' => $item->notes,
+                ]),
+            ],
+        ]);
     }
 
     /**

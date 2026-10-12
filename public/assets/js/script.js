@@ -374,6 +374,260 @@ window.toggleDeliveryLocationInput = function (val) {
 };
 
 // ==========================================
+// ORDER RECAP & HISTORY HELPERS
+// ==========================================
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function saveOrderToHistory(orderData) {
+  try {
+    let orders = JSON.parse(localStorage.getItem('cafetariansa_orders') || '[]');
+    const existingIdx = orders.findIndex(o => o.order_number === orderData.order_number);
+    const enriched = {
+      ...orderData,
+      saved_at: new Date().toISOString()
+    };
+    if (existingIdx >= 0) {
+      orders[existingIdx] = { ...orders[existingIdx], ...enriched };
+    } else {
+      orders.unshift(enriched);
+    }
+    if (orders.length > 20) orders = orders.slice(0, 20);
+    localStorage.setItem('cafetariansa_orders', JSON.stringify(orders));
+    updateOrdersBadge();
+  } catch (e) {
+    console.error("Failed to save order to localStorage:", e);
+  }
+}
+
+function updateOrdersBadge() {
+  try {
+    const orders = JSON.parse(localStorage.getItem('cafetariansa_orders') || '[]');
+    const badge = document.getElementById("myOrdersCountBadge");
+    if (badge) badge.textContent = orders.length;
+  } catch (e) {}
+}
+
+function renderSuccessOrderRecap(orderData) {
+  const orderNumEl = document.getElementById("successOrderNumber");
+  const customerNameEl = document.getElementById("successCustomerName");
+  const pickupTimeEl = document.getElementById("successPickupTime");
+  const pickupTypeEl = document.getElementById("successPickupType");
+  const totalAmountEl = document.getElementById("successTotalAmount");
+  const paymentMethodEl = document.getElementById("successPaymentMethod");
+  const paymentBadgeEl = document.getElementById("successPaymentStatusBadge");
+  const subtotalEl = document.getElementById("successSubtotal");
+  const serviceFeeEl = document.getElementById("successServiceFee");
+  const itemCountEl = document.getElementById("successItemCount");
+  const notesRowEl = document.getElementById("successNotesRow");
+  const notesTextEl = document.getElementById("successOrderNotes");
+  const itemsListEl = document.getElementById("successOrderItemsList");
+  const waBtn = document.getElementById("successWhatsAppBtn");
+  const paySnapBtn = document.getElementById("successPaySnapBtn");
+
+  if (orderNumEl) orderNumEl.textContent = orderData.order_number || '-';
+  if (customerNameEl) customerNameEl.textContent = orderData.customer_name || '-';
+  if (pickupTimeEl) pickupTimeEl.textContent = orderData.pickup_time_slot || '-';
+  if (pickupTypeEl) {
+    pickupTypeEl.textContent = (orderData.pickup_type === 'deliver_to_room')
+      ? `Antar (${orderData.delivery_location || 'Ruang Guru/Kelas'})`
+      : 'Ambil di Stand Kantin';
+  }
+  if (totalAmountEl) totalAmountEl.textContent = orderData.formatted_total || `Rp ${Number(orderData.total_amount).toLocaleString('id-ID')}`;
+
+  if (paymentMethodEl) {
+    paymentMethodEl.textContent = (orderData.payment_method === 'cash')
+      ? 'Bayar Tunai di Stand'
+      : `Midtrans (${(orderData.payment_method || 'QRIS').toUpperCase()})`;
+  }
+
+  const isPaid = orderData.order_status === 'confirmed' || orderData.payment_status === 'paid' || orderData.is_paid;
+  if (paymentBadgeEl) {
+    if (isPaid && orderData.payment_method !== 'cash') {
+      paymentBadgeEl.textContent = "🟢 LUNAS (Midtrans)";
+      paymentBadgeEl.style.background = "#dcfce7";
+      paymentBadgeEl.style.color = "#15803d";
+    } else if (orderData.payment_method === 'cash') {
+      paymentBadgeEl.textContent = "💵 Bayar Tunai di Stand";
+      paymentBadgeEl.style.background = "#fef3c7";
+      paymentBadgeEl.style.color = "#b45309";
+    } else {
+      paymentBadgeEl.textContent = "🟡 Menunggu Pembayaran";
+      paymentBadgeEl.style.background = "#fee2e2";
+      paymentBadgeEl.style.color = "#b91c1c";
+    }
+  }
+
+  if (subtotalEl) subtotalEl.textContent = orderData.formatted_subtotal || `Rp ${Number(orderData.subtotal || 0).toLocaleString('id-ID')}`;
+  if (serviceFeeEl) serviceFeeEl.textContent = orderData.formatted_service_fee || `Rp ${Number(orderData.service_fee || 500).toLocaleString('id-ID')}`;
+
+  const items = orderData.items || [];
+  if (itemCountEl) {
+    itemCountEl.textContent = items.reduce((sum, it) => sum + (it.quantity || it.qty || 1), 0);
+  }
+
+  if (notesRowEl && notesTextEl) {
+    if (orderData.notes) {
+      notesRowEl.style.display = "block";
+      notesTextEl.textContent = orderData.notes;
+    } else {
+      notesRowEl.style.display = "none";
+    }
+  }
+
+  // Render items list inside recap
+  if (itemsListEl) {
+    itemsListEl.innerHTML = "";
+    if (items.length === 0) {
+      itemsListEl.innerHTML = `<div style="text-align:center; color:#94a3b8; font-size:1.3rem; padding:10px;">Tidak ada rincian item.</div>`;
+    } else {
+      items.forEach(it => {
+        const itemName = it.menu_name || it.name || "Menu Kantin";
+        const standName = it.stand_name || it.stand || "Stand Kantin";
+        const qty = it.quantity || it.qty || 1;
+        const unitPrice = it.unit_price || it.price || 0;
+        const itemSubtotal = it.subtotal || (qty * unitPrice);
+
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex; justify-content:space-between; align-items:flex-start; padding:8px 0; border-bottom:1px dashed #f1f5f9; font-size:1.3rem;";
+        row.innerHTML = `
+          <div style="flex:1; padding-right:10px;">
+            <div style="font-weight:600; color:#1e293b; line-height:1.3;">${escapeHtml(itemName)}</div>
+            <div style="font-size:1.15rem; color:#64748b; margin-top:2px;">
+              <span style="color:var(--deep-saffron); font-weight:600;">${escapeHtml(standName)}</span> &bull; 
+              <span>${qty}x @ Rp ${Number(unitPrice).toLocaleString('id-ID')}</span>
+            </div>
+            ${it.notes ? `<div style="font-size:1.1rem; color:#ea580c; font-style:italic;">"${escapeHtml(it.notes)}"</div>` : ''}
+          </div>
+          <div style="font-weight:700; color:#0f172a; white-space:nowrap;">
+            Rp ${Number(itemSubtotal).toLocaleString('id-ID')}
+          </div>
+        `;
+        itemsListEl.appendChild(row);
+      });
+    }
+  }
+
+  // WhatsApp message generator
+  let waMsg = `*KONFIRMASI PESANAN KANTIN SMKN 1 CIOMAS*\n`;
+  waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  waMsg += `🔖 *Kode Pesanan:* ${orderData.order_number}\n`;
+  waMsg += `👤 *Pemesan:* ${orderData.customer_name} (${orderData.customer_type || 'Siswa'})\n`;
+  waMsg += `⏰ *Jadwal Ambil:* ${orderData.pickup_time_slot}\n`;
+  waMsg += `📦 *Pengambilan:* ${orderData.pickup_type === 'deliver_to_room' ? 'Antar ke ' + (orderData.delivery_location || 'Ruangan') : 'Ambil di Stand'}\n`;
+  waMsg += `💳 *Metode Bayar:* ${(orderData.payment_method || '').toUpperCase()} (${isPaid ? 'LUNAS' : 'MENUNGGU PEMBAYARAN'})\n`;
+  waMsg += `💰 *TOTAL BAYAR:* *${orderData.formatted_total || 'Rp ' + Number(orderData.total_amount).toLocaleString('id-ID')}*\n`;
+  waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  waMsg += `📋 *Rincian Rekap Menu:*\n`;
+  items.forEach((it, idx) => {
+    const qty = it.quantity || it.qty || 1;
+    const name = it.menu_name || it.name;
+    const stand = it.stand_name || it.stand || 'Stand';
+    const sub = it.subtotal || (qty * (it.unit_price || it.price || 0));
+    waMsg += `${idx + 1}. ${name} (${qty}x) - ${stand} [Rp ${Number(sub).toLocaleString('id-ID')}]\n`;
+  });
+  if (orderData.notes) {
+    waMsg += `📝 *Catatan:* ${orderData.notes}\n`;
+  }
+  waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  waMsg += isPaid 
+    ? `_Pembayaran telah lunas melalui Midtrans. Mohon disiapkan sebelum jam istirahat. Terima kasih!_ 🙏` 
+    : `_Pesanan tercatat, pembayaran akan diselesaikan saat pengambilan di stand._ 🙏`;
+
+  const kantinPhone = "6281234567890";
+  if (waBtn) {
+    waBtn.href = `https://api.whatsapp.com/send?phone=${kantinPhone}&text=${encodeURIComponent(waMsg)}`;
+  }
+
+  if (paySnapBtn) {
+    if (!isPaid && orderData.snap_token) {
+      paySnapBtn.style.display = "flex";
+      paySnapBtn.onclick = function() {
+        if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+          window.snap.pay(orderData.snap_token, {
+            onSuccess: function(res) {
+              handleMidtransSuccess(orderData, res);
+            },
+            onPending: function(res) {
+              showToast("Menunggu pembayaran diselesaikan.");
+            },
+            onError: function(err) {
+              alert("Pembayaran Midtrans gagal atau dibatalkan.");
+            },
+            onClose: function() {
+              showToast("Pembayaran belum diselesaikan.");
+            }
+          });
+        }
+      };
+    } else {
+      paySnapBtn.style.display = "none";
+    }
+  }
+}
+
+function handleMidtransSuccess(orderData, snapResult) {
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+  // Synchronize payment status with backend API
+  fetch(`/api/orders/${orderData.order_number}/confirm-payment`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': csrfToken
+    },
+    body: JSON.stringify(snapResult || {})
+  })
+  .then(res => res.json())
+  .then(result => {
+    const finalData = (result && result.data) ? result.data : orderData;
+    if (!finalData.items || finalData.items.length === 0) {
+      finalData.items = orderData.items;
+    }
+    finalData.is_paid = true;
+    finalData.order_status = 'confirmed';
+    finalData.payment_status = 'paid';
+
+    // Clear cart now that payment is confirmed
+    cart = [];
+    saveCart();
+    renderCartDrawer();
+    window.closeCart();
+    window.closeCheckoutModal();
+
+    saveOrderToHistory(finalData);
+    renderSuccessOrderRecap(finalData);
+    window.openOrderSuccessModal();
+    showToast("Pembayaran Midtrans Berhasil! Pesanan sedang disiapkan.");
+  })
+  .catch(err => {
+    console.error("Failed to sync confirm payment:", err);
+    // Client fallback
+    orderData.is_paid = true;
+    orderData.order_status = 'confirmed';
+    orderData.payment_status = 'paid';
+    cart = [];
+    saveCart();
+    renderCartDrawer();
+    window.closeCart();
+    window.closeCheckoutModal();
+    saveOrderToHistory(orderData);
+    renderSuccessOrderRecap(orderData);
+    window.openOrderSuccessModal();
+    showToast("Pembayaran Midtrans Berhasil!");
+  });
+}
+
+// ==========================================
 // SUBMIT ORDER TO LARAVEL DATABASE API
 // ==========================================
 window.submitCanteenOrder = function (event) {
@@ -426,6 +680,19 @@ window.submitCanteenOrder = function (event) {
   const csrfMeta = document.querySelector('meta[name="csrf-token"]');
   const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
+  // Take snapshot of cart items for reliable recap
+  const cartSnapshot = cart.map(item => ({
+    menu_id: item.id,
+    name: item.name,
+    menu_name: item.name,
+    stand_name: item.stand,
+    unit_price: item.price,
+    quantity: item.qty,
+    qty: item.qty,
+    subtotal: item.price * item.qty,
+    notes: null
+  }));
+
   const orderPayload = {
     customer_name: name,
     customer_phone: phone,
@@ -435,16 +702,16 @@ window.submitCanteenOrder = function (event) {
     pickup_time_slot: pickupTime,
     payment_method: paymentMethod,
     notes: notes || null,
-    items: cart.map(item => ({
-      menu_id: item.id,
-      quantity: item.qty,
+    items: cartSnapshot.map(item => ({
+      menu_id: item.menu_id,
+      quantity: item.quantity,
       notes: null
     }))
   };
 
   // Button loading state
   if (submitBtn) submitBtn.disabled = true;
-  if (submitBtnText) submitBtnText.textContent = "Memproses Pesanan...";
+  if (submitBtnText) submitBtnText.textContent = (paymentMethod === 'cash') ? "Membuat Pesanan..." : "Menghubungkan Midtrans...";
 
   fetch('/api/orders', {
     method: 'POST',
@@ -462,121 +729,78 @@ window.submitCanteenOrder = function (event) {
     return response.json();
   })
   .then(result => {
-    if (result.success) {
-      const data = result.data;
+    if (!result.success) {
+      throw new Error(result.message || "Gagal membuat pesanan.");
+    }
 
-      // Populate Success Modal
-      const orderNumEl = document.getElementById("successOrderNumber");
-      const customerNameEl = document.getElementById("successCustomerName");
-      const pickupTimeEl = document.getElementById("successPickupTime");
-      const pickupTypeEl = document.getElementById("successPickupType");
-      const totalAmountEl = document.getElementById("successTotalAmount");
-      const paymentMethodEl = document.getElementById("successPaymentMethod");
-      const paySnapBtn = document.getElementById("successPaySnapBtn");
-      const waBtn = document.getElementById("successWhatsAppBtn");
+    const data = result.data;
+    if (!data.items || data.items.length === 0) {
+      data.items = cartSnapshot;
+    }
 
-      if (orderNumEl) orderNumEl.textContent = data.order_number;
-      if (customerNameEl) customerNameEl.textContent = data.customer_name;
-      if (pickupTimeEl) pickupTimeEl.textContent = data.pickup_time_slot;
-      if (pickupTypeEl) pickupTypeEl.textContent = data.pickup_type === 'deliver_to_room' ? `Antar (${data.delivery_location || 'Ruang Guru'})` : 'Ambil di Stand Kantin';
-      if (totalAmountEl) totalAmountEl.textContent = data.formatted_total;
-      if (paymentMethodEl) {
-        paymentMethodEl.textContent = (data.payment_method === 'cash')
-          ? 'Bayar Tunai di Stand'
-          : `Midtrans (${data.payment_method.toUpperCase()})`;
-      }
-
-      // WhatsApp message generator
-      let waMsg = `*KONFIRMASI PESANAN KANTIN SMKN 1 CIOMAS*\n`;
-      waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-      waMsg += `🔖 *Kode Pesanan:* ${data.order_number}\n`;
-      waMsg += `👤 *Pemesan:* ${data.customer_name} (${data.customer_type})\n`;
-      waMsg += `⏰ *Jadwal Ambil:* ${data.pickup_time_slot}\n`;
-      waMsg += `📦 *Pengambilan:* ${data.pickup_type === 'deliver_to_room' ? 'Antar ke ' + (data.delivery_location || 'Ruangan') : 'Ambil di Stand'}\n`;
-      waMsg += `💳 *Metode Bayar:* ${data.payment_method.toUpperCase()}\n`;
-      waMsg += `💰 *TOTAL BAYAR:* *${data.formatted_total}*\n`;
-      waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-      waMsg += `📋 *Rincian Menu:*\n`;
-      cart.forEach((item, idx) => {
-        waMsg += `${idx + 1}. ${item.name} (${item.qty}x) - ${item.stand}\n`;
-      });
-      if (notes) {
-        waMsg += `📝 *Catatan:* ${notes}\n`;
-      }
-      waMsg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-      waMsg += `_Mohon disiapkan sebelum jam istirahat sekolah. Terima kasih!_ 🙏`;
-
-      const kantinPhone = "6281234567890";
-      if (waBtn) {
-        waBtn.href = `https://api.whatsapp.com/send?phone=${kantinPhone}&text=${encodeURIComponent(waMsg)}`;
-      }
-
-      // Close checkout modal & cart
-      window.closeCheckoutModal();
+    // ===============================================
+    // JIKA PEMBAYARAN TUNAI (CASH DI STAND)
+    // ===============================================
+    if (paymentMethod === 'cash') {
+      // 1. Kosongkan keranjang
       cart = [];
       saveCart();
       renderCartDrawer();
       window.closeCart();
+      window.closeCheckoutModal();
 
-      // Configure Re-pay button if Snap token is present
-      if (data.snap_token) {
-        if (paySnapBtn) {
-          paySnapBtn.style.display = "flex";
-          paySnapBtn.onclick = function () {
-            if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
-              window.snap.pay(data.snap_token, {
-                onSuccess: function (res) {
-                  showToast("Pembayaran berhasil dikonfirmasi!");
-                  if (paymentMethodEl) paymentMethodEl.textContent += " (LUNAS)";
-                },
-                onPending: function (res) {
-                  showToast("Menunggu pembayaran diselesaikan.");
-                },
-                onError: function (err) {
-                  alert("Pembayaran Midtrans gagal atau dibatalkan.");
-                },
-                onClose: function () {
-                  console.log("Snap modal closed by user.");
-                }
-              });
-            } else if (data.redirect_url) {
-              window.open(data.redirect_url, '_blank');
-            }
-          };
-        }
+      // 2. Simpan riwayat pesanan
+      saveOrderToHistory({ ...data, is_paid: false, order_status: 'confirmed' });
 
-        // Auto popup Snap window if window.snap is loaded
-        if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
-          window.snap.pay(data.snap_token, {
-            onSuccess: function (res) {
-              console.log("Midtrans payment success:", res);
-              window.openOrderSuccessModal();
-              showToast("Pembayaran Midtrans Berhasil!");
-              if (paymentMethodEl) paymentMethodEl.textContent += " (LUNAS)";
-            },
-            onPending: function (res) {
-              console.log("Midtrans payment pending:", res);
-              window.openOrderSuccessModal();
-              showToast("Silakan selesaikan pembayaran sesuai petunjuk.");
-            },
-            onError: function (err) {
-              console.error("Midtrans payment error:", err);
-              window.openOrderSuccessModal();
-              alert("Pembayaran belum berhasil diselesaikan.");
-            },
-            onClose: function () {
-              window.openOrderSuccessModal();
-            }
-          });
-          return;
-        }
-      } else {
-        if (paySnapBtn) paySnapBtn.style.display = "none";
-      }
-
-      // Open Success Modal directly for cash or mock
+      // 3. Tampilkan modal sukses struk & rekap
+      renderSuccessOrderRecap(data);
       window.openOrderSuccessModal();
-      showToast("Pesanan berhasil dibuat & tersimpan di database!");
+      showToast("Pesanan berhasil dibuat! Silakan bayar tunai saat pengambilan.");
+      return;
+    }
+
+    // ===============================================
+    // JIKA PEMBAYARAN ONLINE (MIDTRANS: QRIS, VA)
+    // JANGAN KOSONGKAN KERANJANG DULU & JANGAN BUKA MODAL SUKSES DULU!
+    // TUNGGU SAMPAI USER SELESAI BAYAR!
+    // ===============================================
+    if (data.snap_token) {
+      if (typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+        window.snap.pay(data.snap_token, {
+          onSuccess: function (res) {
+            console.log("Midtrans payment success:", res);
+            handleMidtransSuccess(data, res);
+          },
+          onPending: function (res) {
+            console.log("Midtrans payment pending:", res);
+            // Simpan sebagai pesanan menunggu bayar di history
+            saveOrderToHistory({ ...data, is_paid: false, order_status: 'pending_payment' });
+            alert("Pesanan tercatat dengan status Menunggu Pembayaran. Silakan selesaikan pembayaran agar pesanan segera dibuat oleh stand kantin.");
+            if (submitBtn) submitBtn.disabled = false;
+            if (submitBtnText) submitBtnText.textContent = "Konfirmasi & Pesan";
+          },
+          onError: function (err) {
+            console.error("Midtrans payment error:", err);
+            // JANGAN BUKA MODAL SUKSES! KERANJANG TIDAK DIHAPUS!
+            alert("Pembayaran Midtrans belum berhasil atau dibatalkan. Keranjang belanja Anda tetap tersimpan. Silakan coba kembali.");
+            if (submitBtn) submitBtn.disabled = false;
+            if (submitBtnText) submitBtnText.textContent = "Konfirmasi & Pesan";
+          },
+          onClose: function () {
+            console.log("Snap modal closed by user without paying.");
+            // JANGAN BUKA MODAL SUKSES! KERANJANG TIDAK DIHAPUS!
+            alert("⚠️ Pembayaran Midtrans belum diselesaikan. Pesanan belum dibuat. Keranjang belanjamu masih aman, silakan selesaikan pembayaran atau pilih metode lain.");
+            if (submitBtn) submitBtn.disabled = false;
+            if (submitBtnText) submitBtnText.textContent = "Konfirmasi & Pesan";
+          }
+        });
+      } else if (data.redirect_url) {
+        window.open(data.redirect_url, '_blank');
+      } else {
+        alert("Gagal memuat gateway pembayaran Midtrans.");
+      }
+    } else {
+      alert("Token pembayaran tidak ditemukan. Silakan coba kembali.");
     }
   })
   .catch(error => {
@@ -608,10 +832,184 @@ window.closeOrderSuccessModal = function () {
   }
 };
 
-// Notification & Bookmarks Bottom Sheets
+// ==========================================
+// NOTIFICATIONS & REKAP PESANAN BOTTOM SHEET
+// ==========================================
+window.switchOrdersSheetTab = function (tabName) {
+  const ordersTab = document.getElementById("tabContentMyOrders");
+  const infoTab = document.getElementById("tabContentCanteenInfo");
+  const btnOrders = document.getElementById("tabBtnMyOrders");
+  const btnInfo = document.getElementById("tabBtnCanteenInfo");
+
+  if (tabName === 'orders') {
+    if (ordersTab) ordersTab.style.display = "block";
+    if (infoTab) infoTab.style.display = "none";
+    if (btnOrders) {
+      btnOrders.style.background = "var(--deep-saffron)";
+      btnOrders.style.color = "#fff";
+    }
+    if (btnInfo) {
+      btnInfo.style.background = "#f1f5f9";
+      btnInfo.style.color = "#64748b";
+    }
+  } else {
+    if (ordersTab) ordersTab.style.display = "none";
+    if (infoTab) {
+      infoTab.style.display = "flex";
+    }
+    if (btnOrders) {
+      btnOrders.style.background = "#f1f5f9";
+      btnOrders.style.color = "#64748b";
+    }
+    if (btnInfo) {
+      btnInfo.style.background = "var(--deep-saffron)";
+      btnInfo.style.color = "#fff";
+    }
+  }
+};
+
+window.renderRecentOrders = function () {
+  const container = document.getElementById("recentOrdersListContainer");
+  const badge = document.getElementById("myOrdersCountBadge");
+  if (!container) return;
+
+  let orders = [];
+  try {
+    orders = JSON.parse(localStorage.getItem('cafetariansa_orders') || '[]');
+  } catch (e) {
+    orders = [];
+  }
+
+  if (badge) badge.textContent = orders.length;
+
+  if (orders.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:30px 10px; color:#64748b;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#f8fafc; border:1px dashed #cbd5e1; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; color:#94a3b8; font-size:2.8rem;">
+          <ion-icon name="bag-handle-outline"></ion-icon>
+        </div>
+        <p style="font-size:1.5rem; font-weight:700; color:#1e293b; margin-bottom:4px;">Belum Ada Riwayat Pesanan</p>
+        <p style="font-size:1.25rem; color:#64748b; margin-bottom:14px;">Kamu belum melakukan pemesanan makanan atau minuman hari ini.</p>
+        <button type="button" class="btn" onclick="closeNotificationsSheet(); window.location.hash='#food-menu';" style="margin:0 auto; padding:8px 18px; border-radius:30px; font-size:1.3rem;">
+          Pesan Menu Kantin Sekarang
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = "";
+  orders.forEach((ord, index) => {
+    const isPaid = ord.order_status === 'confirmed' || ord.payment_status === 'paid' || ord.is_paid;
+    const isCash = ord.payment_method === 'cash';
+    let statusText = "🟢 Lunas & Disiapkan";
+    let statusBg = "#dcfce7";
+    let statusColor = "#15803d";
+
+    if (isCash) {
+      statusText = "💵 Bayar Tunai di Stand";
+      statusBg = "#fef3c7";
+      statusColor = "#b45309";
+    } else if (!isPaid) {
+      statusText = "🟡 Menunggu Pembayaran";
+      statusBg = "#fee2e2";
+      statusColor = "#b91c1c";
+    }
+
+    const items = ord.items || [];
+    let itemsSummaryHtml = "";
+    items.forEach(it => {
+      const name = it.menu_name || it.name || "Menu";
+      const qty = it.quantity || it.qty || 1;
+      const sub = it.subtotal || (qty * (it.unit_price || it.price || 0));
+      itemsSummaryHtml += `
+        <div style="display:flex; justify-content:space-between; font-size:1.25rem; color:#334155; margin-bottom:2px;">
+          <span>${qty}x ${escapeHtml(name)}</span>
+          <span style="font-weight:600;">Rp ${Number(sub).toLocaleString('id-ID')}</span>
+        </div>
+      `;
+    });
+
+    const card = document.createElement("div");
+    card.style.cssText = "background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.03);";
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #f1f5f9; padding-bottom:6px;">
+        <div>
+          <span style="font-family:monospace; font-weight:700; font-size:1.35rem; color:var(--deep-saffron);">${escapeHtml(ord.order_number)}</span>
+          <div style="font-size:1.15rem; color:#64748b;">${escapeHtml(ord.pickup_time_slot || '')}</div>
+        </div>
+        <span style="font-size:1.15rem; font-weight:700; padding:2px 8px; border-radius:12px; background:${statusBg}; color:${statusColor};">
+          ${statusText}
+        </span>
+      </div>
+
+      <div style="margin:8px 0; background:#f8fafc; border-radius:8px; padding:8px 10px;">
+        ${itemsSummaryHtml}
+        <div style="border-top:1px dashed #cbd5e1; margin-top:6px; padding-top:6px; display:flex; justify-content:space-between; font-weight:700; font-size:1.35rem; color:#0f172a;">
+          <span>Total:</span>
+          <span style="color:var(--cinnabar);">${ord.formatted_total || 'Rp ' + Number(ord.total_amount).toLocaleString('id-ID')}</span>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        ${(!isPaid && !isCash && ord.snap_token) ? `
+          <button type="button" class="btn" onclick="retrySnapPayment('${escapeHtml(ord.order_number)}')" style="flex:1; padding:6px 10px; font-size:1.2rem; border-radius:20px; background:#ff9d2d; color:#fff;">
+            💳 Bayar Sekarang
+          </button>
+        ` : ''}
+        <button type="button" class="btn" onclick="viewOrderRecapDetail(${index})" style="flex:1; padding:6px 10px; font-size:1.2rem; border-radius:20px; background:#f1f5f9; color:#475569;">
+          📋 Rekap Lengkap
+        </button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+};
+
+window.viewOrderRecapDetail = function (index) {
+  try {
+    const orders = JSON.parse(localStorage.getItem('cafetariansa_orders') || '[]');
+    if (orders[index]) {
+      closeNotificationsSheet();
+      renderSuccessOrderRecap(orders[index]);
+      window.openOrderSuccessModal();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+window.retrySnapPayment = function (orderNumber) {
+  try {
+    const orders = JSON.parse(localStorage.getItem('cafetariansa_orders') || '[]');
+    const ord = orders.find(o => o.order_number === orderNumber);
+    if (ord && ord.snap_token && typeof window.snap !== 'undefined' && typeof window.snap.pay === 'function') {
+      window.snap.pay(ord.snap_token, {
+        onSuccess: function (res) {
+          handleMidtransSuccess(ord, res);
+        },
+        onPending: function (res) {
+          showToast("Menunggu pembayaran diselesaikan.");
+        },
+        onError: function (err) {
+          alert("Pembayaran gagal atau dibatalkan.");
+        },
+        onClose: function () {
+          showToast("Pembayaran belum diselesaikan.");
+        }
+      });
+    } else {
+      alert("Token pembayaran tidak ditemukan. Silakan buat pesanan baru.");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 window.openNotificationsSheet = function () {
   const sheet = document.getElementById("notifSheet");
   const backdrop = document.getElementById("notifSheetBackdrop");
+  renderRecentOrders();
   if (sheet && backdrop) {
     sheet.classList.add("active");
     backdrop.classList.add("active");
@@ -648,6 +1046,7 @@ window.closeBookmarksSheet = function () {
 // Bind on load
 document.addEventListener("DOMContentLoaded", function () {
   renderCartDrawer();
+  updateOrdersBadge();
 
   // Bind all cart toggle buttons
   const cartToggleBtns = document.querySelectorAll("[data-cart-toggle-btn], [data-cart-open-btn]");

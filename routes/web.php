@@ -28,6 +28,7 @@ Route::get('/info', function () {
 Route::post('/api/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/api/orders/{orderNumber}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/api/orders/{orderNumber}/payment-status', [OrderController::class, 'paymentStatus'])->name('orders.payment-status');
+Route::post('/api/orders/{orderNumber}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
 
 // Midtrans Payment Gateway Webhook Notification
 Route::post('/api/midtrans/notification', [MidtransCallbackController::class, 'handle'])->name('midtrans.notification');
