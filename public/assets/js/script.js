@@ -14,14 +14,126 @@ if (menuToggleBtn && navbar) {
   });
 }
 
-for (let i = 0; i < navbarLinks.length; i++) {
-  navbarLinks[i].addEventListener("click", function () {
-    if (navbar && navbar.classList.contains("active")) {
-      navbar.classList.toggle("active");
-      if (menuToggleBtn) menuToggleBtn.classList.toggle("active");
+/**
+ * NAVBAR ACTIVE SCROLLSPY & SMOOTH CLICK HANDLING (ZERO FLICKER)
+ */
+const navLinks = document.querySelectorAll(".navbar-link[href^='#'], [data-nav-link][href^='#']");
+let isClickScrolling = false;
+let clickScrollTimer = null;
+
+function getTrackedSections() {
+  const ids = ["home", "about", "food-menu", "blog", "footer"];
+  const list = [];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) list.push(el);
+  });
+  return list;
+}
+
+function setActiveNavById(sectionId) {
+  if (!sectionId) return;
+
+  navLinks.forEach(link => {
+    const targetHash = link.getAttribute("href");
+    if (targetHash === `#${sectionId}`) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
     }
   });
+
+  // Sync bottom dock item smoothly
+  const dockHome = document.querySelector('.dock-item[data-nav-target="home"]');
+  const dockMenu = document.querySelector('.dock-item[data-nav-target="search"]');
+  if (dockHome && dockMenu) {
+    if (sectionId === "food-menu") {
+      dockMenu.classList.add("active");
+      dockHome.classList.remove("active");
+    } else if (sectionId === "home" || sectionId === "about") {
+      dockHome.classList.add("active");
+      dockMenu.classList.remove("active");
+    }
+  }
 }
+
+function updateActiveNavLink() {
+  if (isClickScrolling) return; // Prevent intermediate buttons from flickering during smooth scroll!
+
+  const trackedSections = getTrackedSections();
+  if (!trackedSections.length) return;
+
+  // Center sweet-spot (roughly 35% from the top of viewport)
+  const focusLine = window.scrollY + (window.innerHeight * 0.35);
+  let currentSectionId = "";
+
+  // If scrolled to near the bottom of document, activate footer (Kontak)
+  if ((window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 90)) {
+    currentSectionId = "footer";
+  } else {
+    for (let i = 0; i < trackedSections.length; i++) {
+      const sec = trackedSections[i];
+      const top = sec.offsetTop;
+      const height = sec.offsetHeight;
+      if (focusLine >= top && focusLine < top + height) {
+        currentSectionId = sec.getAttribute("id");
+        break;
+      }
+    }
+    if (!currentSectionId && window.scrollY < 200) {
+      currentSectionId = "home";
+    }
+  }
+
+  if (currentSectionId) {
+    setActiveNavById(currentSectionId);
+  }
+}
+
+// Click navigation with lock to eliminate "ngeilir" hopping across intermediate buttons
+navLinks.forEach(link => {
+  link.addEventListener("click", function (e) {
+    const targetHref = this.getAttribute("href");
+    if (targetHref && targetHref.startsWith("#")) {
+      const targetId = targetHref.substring(1);
+
+      if (navbar && navbar.classList.contains("active")) {
+        navbar.classList.remove("active");
+        if (menuToggleBtn) menuToggleBtn.classList.remove("active");
+      }
+
+      // 1. Immediately highlight clicked button without waiting
+      setActiveNavById(targetId);
+
+      // 2. Lock scrollspy for 800ms so it does NOT animate through intermediate buttons while scrolling
+      isClickScrolling = true;
+      clearTimeout(clickScrollTimer);
+      clickScrollTimer = setTimeout(() => {
+        isClickScrolling = false;
+        updateActiveNavLink();
+      }, 850);
+    }
+  });
+});
+
+// Scroll listener with RAF throttling
+let isScrollSpyTicking = false;
+window.addEventListener("scroll", function () {
+  if (isClickScrolling) return; // Silent during click smooth scroll
+  if (!isScrollSpyTicking) {
+    window.requestAnimationFrame(function () {
+      updateActiveNavLink();
+      isScrollSpyTicking = false;
+    });
+    isScrollSpyTicking = true;
+  }
+}, { passive: true });
+
+// Listen on hashchange and initial load
+window.addEventListener("DOMContentLoaded", updateActiveNavLink);
+window.addEventListener("hashchange", updateActiveNavLink);
+window.addEventListener("load", updateActiveNavLink);
+updateActiveNavLink();
 
 /**
  * header sticky & back to top
@@ -781,15 +893,33 @@ window.submitCanteenOrder = function (event) {
           },
           onError: function (err) {
             console.error("Midtrans payment error:", err);
-            // JANGAN BUKA MODAL SUKSES! KERANJANG TIDAK DIHAPUS!
-            alert("Pembayaran Midtrans belum berhasil atau dibatalkan. Keranjang belanja Anda tetap tersimpan. Silakan coba kembali.");
+            if (data && data.order_number) {
+              fetch(`/api/orders/${data.order_number}/cancel`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'X-CSRF-TOKEN': csrfToken
+                }
+              }).catch(e => console.error("Cancel order error:", e));
+            }
+            alert("Pembayaran Midtrans dibatalkan atau gagal. Keranjang belanja Anda tetap aman.");
             if (submitBtn) submitBtn.disabled = false;
             if (submitBtnText) submitBtnText.textContent = "Konfirmasi & Pesan";
           },
           onClose: function () {
             console.log("Snap modal closed by user without paying.");
-            // JANGAN BUKA MODAL SUKSES! KERANJANG TIDAK DIHAPUS!
-            alert("⚠️ Pembayaran Midtrans belum diselesaikan. Pesanan belum dibuat. Keranjang belanjamu masih aman, silakan selesaikan pembayaran atau pilih metode lain.");
+            if (data && data.order_number) {
+              fetch(`/api/orders/${data.order_number}/cancel`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'X-CSRF-TOKEN': csrfToken
+                }
+              }).catch(e => console.error("Cancel order error:", e));
+            }
+            alert("⚠️ Pembayaran dibatalkan. Pesanan yang belum dibayar telah otomatis dibatalkan agar tidak menumpuk di dashboard. Keranjang belanja masih tersimpan, silakan pilih metode lain (seperti BCA / Tunai) jika ingin melanjutkan.");
             if (submitBtn) submitBtn.disabled = false;
             if (submitBtnText) submitBtnText.textContent = "Konfirmasi & Pesan";
           }

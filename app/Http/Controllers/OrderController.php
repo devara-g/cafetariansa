@@ -234,4 +234,30 @@ class OrderController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Cancel an unpaid order when customer cancels or closes the payment gateway without paying.
+     */
+    public function cancel(string $orderNumber): JsonResponse
+    {
+        $order = Order::with('payments')->where('order_number', $orderNumber)->firstOrFail();
+
+        // Only allow cancelling if still pending payment
+        if ($order->order_status === 'pending_payment') {
+            $order->update([
+                'order_status' => 'cancelled',
+                'cancelled_reason' => 'Dibatalkan oleh pelanggan (pembayaran tidak diselesaikan)',
+            ]);
+            $order->payments()->where('status', 'pending')->update(['status' => 'cancelled']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan berhasil dibatalkan.',
+            'data' => [
+                'order_number' => $order->order_number,
+                'order_status' => $order->order_status,
+            ],
+        ]);
+    }
 }

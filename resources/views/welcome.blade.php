@@ -149,7 +149,10 @@
 
             <p class="hero-text">Layanan kantin dan cafetaria resmi SMKN 1 Ciomas, Sekolah Menengah Kejuruan di Ciomas. Menyediakan aneka makanan, minuman segar, dan jajanan higienis untuk seluruh siswa, guru, dan staf sekolah.</p>
 
-            <a href="#food-menu" class="btn">Lihat Menu Kantin</a>
+            <a href="#food-menu" class="btn btn-hover">
+              <span>Lihat Menu Kantin</span>
+              <ion-icon name="restaurant-outline"></ion-icon>
+            </a>
 
           </div>
 
@@ -392,7 +395,10 @@
 
             </ul>
 
-            <a href="#food-menu" class="btn btn-hover">Jelajahi Menu</a>
+            <a href="#food-menu" class="btn btn-hover">
+              <span>Jelajahi Menu</span>
+              <ion-icon name="arrow-forward-outline"></ion-icon>
+            </a>
 
           </div>
 
@@ -526,7 +532,10 @@
               Setelah berkonsentrasi dalam kegiatan belajar teori dan praktikum kejuruan, pulihkan staminamu dengan aneka hidangan segar dan lezat di Kantin SMKN 1 Ciomas.
             </p>
 
-            <a href="#food-menu" class="btn btn-hover">Pesan Sekarang</a>
+            <a href="#food-menu" class="btn btn-hover">
+              <span>Pesan Sekarang</span>
+              <ion-icon name="bag-handle-outline"></ion-icon>
+            </a>
           </div>
 
           <figure class="cta-banner">
@@ -561,7 +570,10 @@
               Bagi bapak/ibu guru atau perwakilan kelas yang membutuhkan konsumsi rapat, kegiatan jurusan, atau makan siang tanpa perlu antre, tim Kantin SMKN 1 Ciomas siap mengantarkan pesanan tepat waktu.
             </p>
 
-            <a href="#footer" class="btn btn-hover">Hubungi Kantin</a>
+            <a href="#footer" class="btn btn-hover">
+              <span>Hubungi Kantin</span>
+              <ion-icon name="call-outline"></ion-icon>
+            </a>
           </div>
 
           <figure class="delivery-banner">
@@ -726,7 +738,10 @@
 
                   <p class="banner-text">Nasi + lauk ayam krispi + es teh manis mulai Rp 12.000</p>
 
-                  <a href="#food-menu" class="btn">Pesan Sekarang</a>
+                  <a href="#food-menu" class="btn btn-hover">
+                    <span>Pesan Sekarang</span>
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                  </a>
                 </div>
 
               </div>
@@ -743,7 +758,10 @@
 
                   <p class="banner-text">Mulai dari Rp 3.000</p>
 
-                  <a href="#food-menu" class="btn">Lihat Menu</a>
+                  <a href="#food-menu" class="btn btn-hover">
+                    <span>Lihat Menu</span>
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                  </a>
                 </div>
 
               </div>
@@ -760,7 +778,10 @@
 
                   <p class="banner-text">Camilan lezat pengganjal lapar</p>
 
-                  <a href="#food-menu" class="btn">Lihat Menu</a>
+                  <a href="#food-menu" class="btn btn-hover">
+                    <span>Lihat Menu</span>
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                  </a>
                 </div>
 
               </div>
@@ -777,7 +798,10 @@
 
                   <p class="banner-text">Buka mulai pukul 06.30 WIB setiap hari sekolah</p>
 
-                  <a href="#food-menu" class="btn">Lihat Menu</a>
+                  <a href="#food-menu" class="btn btn-hover">
+                    <span>Lihat Menu</span>
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                  </a>
                 </div>
 
               </div>
@@ -972,7 +996,7 @@
     - #FOOTER
   -->
 
-  <footer class="footer">
+  <footer class="footer" id="footer">
 
     <div class="footer-top">
       <div class="container">
@@ -1084,7 +1108,10 @@
 
           <textarea name="message" required placeholder="Tuliskan rincian pesanan atau pesan Anda..." aria-label="Pesan" class="input-field"></textarea>
 
-          <button type="submit" class="btn">Kirim Pesan / Pesanan</button>
+          <button type="submit" class="btn btn-hover">
+            <span>Kirim Pesan / Pesanan</span>
+            <ion-icon name="paper-plane-outline"></ion-icon>
+          </button>
 
         </form>
 

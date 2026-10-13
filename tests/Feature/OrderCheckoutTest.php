@@ -97,4 +97,27 @@ class OrderCheckoutTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_unpaid_order_can_be_cancelled(): void
+    {
+        $order = Order::factory()->create([
+            'order_status' => 'pending_payment',
+        ]);
+
+        $response = $this->postJson("/api/orders/{$order->order_number}/cancel");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'order_number' => $order->order_number,
+                    'order_status' => 'cancelled',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('orders', [
+            'id' => $order->id,
+            'order_status' => 'cancelled',
+        ]);
+    }
 }

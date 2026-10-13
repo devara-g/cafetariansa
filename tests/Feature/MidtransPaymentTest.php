@@ -52,8 +52,9 @@ class MidtransPaymentTest extends TestCase
             ]);
 
         $this->assertNotEmpty($response->json('data.snap_token'));
+        $order = Order::where('order_number', $response->json('data.order_number'))->first();
         $this->assertDatabaseHas('payments', [
-            'order_id' => Order::where('customer_phone', '081234567890')->first()->id,
+            'order_id' => $order->id,
             'payment_method' => 'qris',
             'status' => 'pending',
         ]);
