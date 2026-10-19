@@ -26,12 +26,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // 2. Call Seeders
+        // 2. Call Seeders (Tanpa data dummy pesanan/transaksi)
         $this->call([
             CategorySeeder::class,
             StandSeeder::class,
             MenuSeeder::class,
-            OrderSeeder::class,
         ]);
     }
 }

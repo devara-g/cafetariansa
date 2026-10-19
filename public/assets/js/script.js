@@ -105,6 +105,12 @@ navLinks.forEach(link => {
       // 1. Immediately highlight clicked button without waiting
       setActiveNavById(targetId);
 
+      const targetSec = document.getElementById(targetId);
+      if (targetSec) {
+        targetSec.classList.add("section-target-highlight");
+        setTimeout(() => targetSec.classList.remove("section-target-highlight"), 1200);
+      }
+
       // 2. Lock scrollspy for 800ms so it does NOT animate through intermediate buttons while scrolling
       isClickScrolling = true;
       clearTimeout(clickScrollTimer);
@@ -1175,6 +1181,8 @@ window.closeBookmarksSheet = function () {
 
 // Bind on load
 document.addEventListener("DOMContentLoaded", function () {
+  initAppPreloader();
+  initScrollReveal();
   renderCartDrawer();
   updateOrdersBadge();
 
@@ -1203,3 +1211,110 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+/**
+ * ========================================================
+ * PRELOADER & INITIAL PAGE ENTRANCE ANIMATION
+ * ========================================================
+ */
+function initAppPreloader() {
+  const preloader = document.getElementById("appPreloader");
+  if (!preloader) {
+    document.body.classList.add("page-loaded");
+    return;
+  }
+
+  const statusText = document.getElementById("preloaderStatusText");
+  const statuses = [
+    "Menyiapkan hidangan lezat...",
+    "Memeriksa menu kantin hari ini...",
+    "Kantin SMKN 1 Ciomas siap melayani!"
+  ];
+  let statusIndex = 0;
+
+  const statusInterval = setInterval(() => {
+    statusIndex = (statusIndex + 1) % statuses.length;
+    if (statusText) {
+      statusText.textContent = statuses[statusIndex];
+    }
+  }, 420);
+
+  const minLoadTime = 650;
+  const startTime = Date.now();
+  let dismissed = false;
+
+  function dismissPreloader() {
+    if (dismissed) return;
+    dismissed = true;
+    clearInterval(statusInterval);
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, minLoadTime - elapsed);
+
+    setTimeout(() => {
+      preloader.classList.add("fade-out");
+      document.body.classList.add("page-loaded");
+
+      // Auto reveal hero section
+      const hero = document.getElementById("home");
+      if (hero) hero.classList.add("is-revealed");
+
+      setTimeout(() => {
+        if (preloader.parentNode) {
+          preloader.style.display = "none";
+        }
+      }, 750);
+    }, remaining);
+  }
+
+  if (document.readyState === "complete") {
+    dismissPreloader();
+  } else {
+    window.addEventListener("load", dismissPreloader);
+    setTimeout(dismissPreloader, 2200);
+  }
+}
+
+/**
+ * ========================================================
+ * SCROLL REVEAL & SECTION TRANSITIONS ENGINE
+ * ========================================================
+ */
+function initScrollReveal() {
+  // 1. Top reading progress bar tracking
+  const scrollProgressBar = document.getElementById("scrollProgressLine");
+  if (scrollProgressBar) {
+    const updateProgress = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      scrollProgressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+    };
+    window.addEventListener("scroll", updateProgress, { passive: true });
+    updateProgress();
+  }
+
+  // 2. IntersectionObserver for smooth section transitions
+  const revealElements = document.querySelectorAll(
+    "[data-section-reveal], [data-reveal-left], [data-reveal-right], [data-reveal-zoom]"
+  );
+
+  if (!("IntersectionObserver" in window)) {
+    revealElements.forEach(el => el.classList.add("is-revealed"));
+    return;
+  }
+
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-revealed");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    root: null,
+    threshold: 0.1,
+    rootMargin: "0px 0px -40px 0px"
+  });
+
+  revealElements.forEach(el => revealObserver.observe(el));
+}

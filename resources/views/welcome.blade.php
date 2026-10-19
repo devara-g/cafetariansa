@@ -46,6 +46,51 @@
 
 <body id="top">
 
+  <!-- Top Reading Progress Indicator -->
+  <div class="scroll-progress-line" id="scrollProgressLine"></div>
+
+  <!-- 
+    - #MODERN PRELOADER FEATURING 3D SKANIC CANTEEN
+  -->
+  <div class="app-preloader" id="appPreloader" aria-hidden="true">
+    <div class="preloader-backdrop-glow"></div>
+    <div class="preloader-backdrop-glow secondary"></div>
+
+    <div class="preloader-card">
+      
+      <!-- 3D Canteen Visual Hero with Floating Badge & Aura Glow -->
+      <div class="preloader-image-container">
+        <div class="preloader-image-aura"></div>
+        <div class="preloader-image-frame">
+          <img src="{{ asset('assets/images/skanic-canteen-3d.jpg') }}" alt="Kantin SKANIC SMKN 1 Ciomas" class="preloader-hero-photo">
+          <div class="preloader-photo-overlay"></div>
+          <div class="preloader-live-badge">
+            <span class="live-pulse-dot"></span>
+            <span>Kantin SKANIC</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Brand Typography -->
+      <div class="preloader-brand-text">
+        <h2 class="preloader-title">Kantin SMKN 1 Ciomas<span class="preloader-dot">.</span></h2>
+        <p class="preloader-subtitle">Pusat Jajanan & Kuliner Resmi Siswa SKANIC</p>
+      </div>
+
+      <!-- Modern Glowing Progress Bar -->
+      <div class="preloader-progress-wrapper">
+        <div class="preloader-progress-bar">
+          <div class="preloader-progress-fill"></div>
+        </div>
+        <div class="preloader-status-container">
+          <ion-icon name="sparkles" class="preloader-status-icon"></ion-icon>
+          <span class="preloader-status-text" id="preloaderStatusText">Menyiapkan seblak, gurilem & aneka es segar...</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- 
     - #HEADER
   -->
@@ -138,7 +183,7 @@
         - #HERO
       -->
 
-      <section class="hero" id="home">
+      <section class="hero" id="home" data-section-reveal>
         <div class="container">
 
           <div class="hero-content">
@@ -175,7 +220,8 @@
         - #PROMO
       -->
 
-      <section class="section section-divider white promo">
+      <section class="section section-divider white promo" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
           <ul class="promo-list has-scrollbar">
@@ -345,10 +391,11 @@
         - #ABOUT
       -->
 
-      <section class="section section-divider gray about" id="about">
+      <section class="section section-divider gray about" id="about" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
-          <div class="about-banner">
+          <div class="about-banner" data-reveal-left>
             <img src="{{ asset('assets/images/about-banner.png') }}" width="509" height="459" loading="lazy" alt="Kantin SMKN 1 Ciomas"
               class="w-100 about-img">
 
@@ -356,7 +403,7 @@
               class="abs-img scale-up-anim">
           </div>
 
-          <div class="about-content">
+          <div class="about-content" data-reveal-right>
 
             <h2 class="h2 section-title">
               Kantin Sehat, Bersih & Nyaman di
@@ -413,7 +460,8 @@
         - #FOOD MENU
       -->
 
-      <section class="section food-menu" id="food-menu">
+      <section class="section food-menu" id="food-menu" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
           <p class="section-subtitle">Pilihan Menu Favorit</p>
@@ -518,10 +566,11 @@
         - #CTA
       -->
 
-      <section class="section section-divider white cta">
+      <section class="section section-divider white cta" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
-          <div class="cta-content">
+          <div class="cta-content" data-reveal-left>
 
             <h2 class="h2 section-title">
               Istirahat Belajar?
@@ -538,7 +587,7 @@
             </a>
           </div>
 
-          <figure class="cta-banner">
+          <figure class="cta-banner" data-reveal-zoom>
             <img src="{{ asset('assets/images/cta-banner.png') }}" width="700" height="637" loading="lazy" alt="Burger Kantin"
               class="w-100 cta-img">
 
@@ -557,10 +606,11 @@
         - #DELIVERY
       -->
 
-      <section class="section section-divider gray delivery">
+      <section class="section section-divider gray delivery" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
-          <div class="delivery-content">
+          <div class="delivery-content" data-reveal-left>
 
             <h2 class="h2 section-title">
               Layanan Pesan Cepat untuk <span class="span">Kelas & Ruang Guru</span>
@@ -576,7 +626,7 @@
             </a>
           </div>
 
-          <figure class="delivery-banner">
+          <figure class="delivery-banner" data-reveal-right>
             <img src="{{ asset('assets/images/delivery-banner-bg.png') }}" width="700" height="602" loading="lazy" alt="clouds"
               class="w-100">
 
@@ -595,7 +645,8 @@
         - #TESTIMONIALS
       -->
 
-      <section class="section section-divider white testi">
+      <section class="section section-divider white testi" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
           <p class="section-subtitle">Ulasan Warga Sekolah</p>
@@ -720,7 +771,8 @@
         - #BANNER
       -->
 
-      <section class="section section-divider gray banner">
+      <section class="section section-divider gray banner" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
           <ul class="banner-list">
@@ -820,7 +872,8 @@
         - #BLOG
       -->
 
-      <section class="section section-divider white blog" id="blog">
+      <section class="section section-divider white blog" id="blog" data-section-reveal>
+        <div class="section-ambient-accent" aria-hidden="true"></div>
         <div class="container">
 
           <p class="section-subtitle">Info & Berita Sekolah</p>
@@ -996,7 +1049,7 @@
     - #FOOTER
   -->
 
-  <footer class="footer" id="footer">
+  <footer class="footer" id="footer" data-section-reveal>
 
     <div class="footer-top">
       <div class="container">
@@ -1249,7 +1302,7 @@
               <ion-icon name="flame-outline" style="color:#ea580c; font-size:1.8rem;"></ion-icon>
               <span>Rekomendasi Menu Hari Ini</span>
             </div>
-            <div class="dock-sheet-item-text">Ayam Crispy Sambal Bawang + Nasi Hangat dan Es Jeruk Peras Segar tersedia di Stand Utama.</div>
+            <div class="dock-sheet-item-text">Seblak Komplit, Gurilem Pedas, Pangsit Kuah, Takoyaki, Es Teh Jumbo, dan Pop Ice Blender tersedia hari ini!</div>
           </div>
           <div class="dock-sheet-item">
             <div class="dock-sheet-item-title">
@@ -1272,28 +1325,64 @@
         </h3>
         <button class="dock-sheet-close" onclick="closeBookmarksSheet()" aria-label="Tutup">&times;</button>
       </div>
-      <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div class="dock-sheet-item-title">Ayam Crispy & Nasi Hangat</div>
-          <div class="dock-sheet-item-text">Rp 12.000 &bull; Stand 1 (Bu Siti)</div>
+      @if(isset($popularMenus) && $popularMenus->count() > 0)
+        @foreach($popularMenus->take(4) as $favMenu)
+          <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div>
+              <div class="dock-sheet-item-title">{{ $favMenu->name }}</div>
+              <div class="dock-sheet-item-text">Rp {{ number_format($favMenu->price, 0, ',', '.') }} &bull; {{ $favMenu->stand->name ?? 'Kantin SKANIC' }}</div>
+            </div>
+            <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;"
+              data-menu-id="{{ $favMenu->id }}"
+              data-menu-name="{{ $favMenu->name }}"
+              data-menu-price="{{ $favMenu->price }}"
+              data-menu-stand="{{ $favMenu->stand->name ?? 'Kantin SKANIC' }}"
+              data-menu-img="{{ asset($favMenu->image ?? 'assets/images/food-menu-1.png') }}"
+              onclick="addToCartFromButton(this); closeBookmarksSheet();">+ Pesan</button>
+          </div>
+        @endforeach
+      @else
+        <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div>
+            <div class="dock-sheet-item-title">Seblak Komplit Prasmanan SKANIC</div>
+            <div class="dock-sheet-item-text">Rp 10.000 &bull; Stand 1 (Bu Siti)</div>
+          </div>
+          <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;"
+            data-menu-id="fav_seblak"
+            data-menu-name="Seblak Komplit Prasmanan SKANIC"
+            data-menu-price="10000"
+            data-menu-stand="Stand 1 (Bu Siti)"
+            data-menu-img="{{ asset('assets/images/food-menu-4.png') }}"
+            onclick="addToCartFromButton(this); closeBookmarksSheet();">+ Pesan</button>
         </div>
-        <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;" onclick="addToCart('food_1', 'Ayam Crispy & Nasi Hangat', 12000, 'Stand 1 (Bu Siti)', 'assets/images/food-menu-1.png'); closeBookmarksSheet();">+ Pesan</button>
-      </div>
-      <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-        <div>
-          <div class="dock-sheet-item-title">Nasi Goreng Spesial SKANIC</div>
-        <div class="dock-sheet-item-text">Rp 10.000 &bull; Stand Utama</div>
-      </div>
-      <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;" onclick="addToCart('promo_1', 'Nasi Goreng Spesial SKANIC', 10000, 'Stand Utama', 'assets/images/promo-1.png'); closeBookmarksSheet();">+ Pesan</button>
+        <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div>
+            <div class="dock-sheet-item-title">Takoyaki Sosis Keju Lumer</div>
+            <div class="dock-sheet-item-text">Rp 8.000 &bull; Stand Utama</div>
+          </div>
+          <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;"
+            data-menu-id="fav_takoyaki"
+            data-menu-name="Takoyaki Sosis Keju Lumer"
+            data-menu-price="8000"
+            data-menu-stand="Stand Utama"
+            data-menu-img="{{ asset('assets/images/promo-4.png') }}"
+            onclick="addToCartFromButton(this); closeBookmarksSheet();">+ Pesan</button>
+        </div>
+        <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div>
+            <div class="dock-sheet-item-title">Pop Ice Blender Coklat Topping Meses</div>
+            <div class="dock-sheet-item-text">Rp 5.000 &bull; Stand Minuman Segar</div>
+          </div>
+          <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;"
+            data-menu-id="fav_popice"
+            data-menu-name="Pop Ice Blender Coklat Topping Meses"
+            data-menu-price="5000"
+            data-menu-stand="Stand Minuman Segar"
+            data-menu-img="{{ asset('assets/images/food-menu-6.png') }}"
+            onclick="addToCartFromButton(this); closeBookmarksSheet();">+ Pesan</button>
+        </div>
+      @endif
     </div>
-    <div class="dock-sheet-item" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-      <div>
-        <div class="dock-sheet-item-title">Es Jeruk Peras Murni</div>
-        <div class="dock-sheet-item-text">Rp 4.000 &bull; Stand Minuman Segar</div>
-      </div>
-      <button type="button" class="btn" style="--height:32px; font-size:1.1rem; padding-inline:14px; border-radius:9999px;" onclick="addToCart('drink_1', 'Es Jeruk Peras Murni', 4000, 'Stand Minuman Segar', 'assets/images/food-menu-3.png'); closeBookmarksSheet();">+ Pesan</button>
-    </div>
-  </div>
 
     - custom js link
   -->
