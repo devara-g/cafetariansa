@@ -1225,9 +1225,14 @@ function initAppPreloader() {
   }
 
   const statusText = document.getElementById("preloaderStatusText");
+  const counterEl = document.getElementById("preloaderCounter");
+  const fillEl = document.getElementById("preloaderProgressFill");
+
   const statuses = [
-    "Menyiapkan hidangan lezat...",
-    "Memeriksa menu kantin hari ini...",
+    "Menghubungkan ke server Kantin SKANIC...",
+    "Menyiapkan seblak, gurilem & takoyaki hangat...",
+    "Menyegarkan pop ice blender & aneka es...",
+    "Memeriksa stok stand makanan kantin...",
     "Kantin SMKN 1 Ciomas siap melayani!"
   ];
   let statusIndex = 0;
@@ -1235,20 +1240,43 @@ function initAppPreloader() {
   const statusInterval = setInterval(() => {
     statusIndex = (statusIndex + 1) % statuses.length;
     if (statusText) {
-      statusText.textContent = statuses[statusIndex];
+      statusText.style.opacity = "0.3";
+      setTimeout(() => {
+        statusText.textContent = statuses[statusIndex];
+        statusText.style.opacity = "1";
+      }, 150);
     }
-  }, 420);
+  }, 480);
 
-  const minLoadTime = 650;
+  // Progressive Percentage Counter & Progress Fill
+  let currentPercent = 0;
+  const targetPercent = 94;
+  const progressTimer = setInterval(() => {
+    if (currentPercent < targetPercent) {
+      currentPercent += Math.floor(Math.random() * 6) + 4;
+      if (currentPercent > targetPercent) currentPercent = targetPercent;
+      if (counterEl) counterEl.textContent = currentPercent + "%";
+      if (fillEl) fillEl.style.width = currentPercent + "%";
+    }
+  }, 50);
+
+  const minLoadTime = 1350;
   const startTime = Date.now();
   let dismissed = false;
 
   function dismissPreloader() {
     if (dismissed) return;
     dismissed = true;
+    clearInterval(progressTimer);
     clearInterval(statusInterval);
+
+    // Fast finish to 100%
+    if (counterEl) counterEl.textContent = "100%";
+    if (fillEl) fillEl.style.width = "100%";
+    if (statusText) statusText.textContent = "Selamat Datang di Kantin SKANIC!";
+
     const elapsed = Date.now() - startTime;
-    const remaining = Math.max(0, minLoadTime - elapsed);
+    const remaining = Math.max(200, minLoadTime - elapsed);
 
     setTimeout(() => {
       preloader.classList.add("fade-out");
@@ -1262,7 +1290,7 @@ function initAppPreloader() {
         if (preloader.parentNode) {
           preloader.style.display = "none";
         }
-      }, 750);
+      }, 700);
     }, remaining);
   }
 
@@ -1270,7 +1298,7 @@ function initAppPreloader() {
     dismissPreloader();
   } else {
     window.addEventListener("load", dismissPreloader);
-    setTimeout(dismissPreloader, 2200);
+    setTimeout(dismissPreloader, 2800);
   }
 }
 
@@ -1293,28 +1321,27 @@ function initScrollReveal() {
     updateProgress();
   }
 
-  // 2. IntersectionObserver for smooth section transitions
+  // 2. Ensure all sections are revealed immediately
   const revealElements = document.querySelectorAll(
     "[data-section-reveal], [data-reveal-left], [data-reveal-right], [data-reveal-zoom]"
   );
 
-  if (!("IntersectionObserver" in window)) {
-    revealElements.forEach(el => el.classList.add("is-revealed"));
-    return;
-  }
+  revealElements.forEach(el => el.classList.add("is-revealed"));
 
-  const revealObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-revealed");
-        observer.unobserve(entry.target);
-      }
+  if ("IntersectionObserver" in window) {
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      root: null,
+      threshold: 0,
+      rootMargin: "50px 0px 50px 0px"
     });
-  }, {
-    root: null,
-    threshold: 0.1,
-    rootMargin: "0px 0px -40px 0px"
-  });
 
-  revealElements.forEach(el => revealObserver.observe(el));
+    revealElements.forEach(el => revealObserver.observe(el));
+  }
 }

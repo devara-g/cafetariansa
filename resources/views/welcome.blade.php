@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#060913">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   
   <title>Kantin SMKN 1 Ciomas - Sekolah Menengah Kejuruan di Ciomas</title>
@@ -50,41 +51,82 @@
   <div class="scroll-progress-line" id="scrollProgressLine"></div>
 
   <!-- 
-    - #MODERN PRELOADER FEATURING 3D SKANIC CANTEEN
+    - #ULTRA-PREMIUM MODERN PRELOADER: KANTIN SKANIC (SMKN 1 CIOMAS)
   -->
   <div class="app-preloader" id="appPreloader" aria-hidden="true">
-    <div class="preloader-backdrop-glow"></div>
-    <div class="preloader-backdrop-glow secondary"></div>
-
-    <div class="preloader-card">
+    <!-- Cinematic Ambient Background Lighting & Dot Grid -->
+    <div class="preloader-bg-ambient">
+      <div class="preloader-orb orb-primary"></div>
+      <div class="preloader-orb orb-secondary"></div>
+      <div class="preloader-orb orb-tertiary"></div>
+      <div class="preloader-grid-pattern"></div>
       
-      <!-- 3D Canteen Visual Hero with Floating Badge & Aura Glow -->
-      <div class="preloader-image-container">
-        <div class="preloader-image-aura"></div>
-        <div class="preloader-image-frame">
-          <img src="{{ asset('assets/images/skanic-canteen-3d.jpg') }}" alt="Kantin SKANIC SMKN 1 Ciomas" class="preloader-hero-photo">
-          <div class="preloader-photo-overlay"></div>
-          <div class="preloader-live-badge">
-            <span class="live-pulse-dot"></span>
-            <span>Kantin SKANIC</span>
+      <!-- Floating Amber & Blue Particles -->
+      <div class="preloader-particle p-1"></div>
+      <div class="preloader-particle p-2"></div>
+      <div class="preloader-particle p-3"></div>
+      <div class="preloader-particle p-4"></div>
+      <div class="preloader-particle p-5"></div>
+      <div class="preloader-particle p-6"></div>
+    </div>
+
+    <!-- Centerpiece Luxury Glassmorphic Console -->
+    <div class="preloader-card">
+      <div class="preloader-card-border-glow"></div>
+
+      <!-- School Crest Stage with Dual High-Tech Rotating Rings -->
+      <div class="preloader-logo-wrapper">
+        <div class="preloader-corona-glow"></div>
+        <div class="preloader-orbit-ring ring-outer">
+          <span class="orbit-node node-1"></span>
+          <span class="orbit-node node-2"></span>
+        </div>
+        <div class="preloader-orbit-ring ring-inner">
+          <span class="orbit-node node-3"></span>
+        </div>
+
+        <!-- 3D Glass Crest Badge for the SMKN 1 Ciomas Shield -->
+        <div class="preloader-crest-plate">
+          <div class="preloader-plate-shine"></div>
+          <img src="{{ asset('assets/images/logo-smkn1ciomas.png') }}?v={{ time() }}" alt="Logo SMK Negeri 1 Ciomas" class="preloader-school-logo">
+        </div>
+
+        <!-- Official Identity Pill -->
+        <div class="preloader-school-pill">
+          <span class="live-pulse-dot"></span>
+          <span class="pill-text">SMK NEGERI 1 CIOMAS &bull; KAB. BOGOR</span>
+        </div>
+      </div>
+
+      <!-- Brand Typography & Subtitle -->
+      <div class="preloader-brand-text">
+        <h2 class="preloader-title">Kantin SKANIC<span class="preloader-dot">.</span></h2>
+        <p class="preloader-subtitle">Pusat Jajanan &amp; Kuliner Resmi Siswa SMKN 1 Ciomas</p>
+        
+        <!-- Micro Badges -->
+        <div class="preloader-tagline-badges">
+          <span class="p-badge"><ion-icon name="flash-outline"></ion-icon> Pesan Cepat</span>
+          <span class="p-badge"><ion-icon name="shield-checkmark-outline"></ion-icon> Halal &amp; Higienis</span>
+          <span class="p-badge"><ion-icon name="wallet-outline"></ion-icon> QRIS &amp; Tunai</span>
+        </div>
+      </div>
+
+      <!-- Modern Cyber/Glass Progress Console -->
+      <div class="preloader-progress-wrapper">
+        <div class="preloader-progress-header">
+          <span class="preloader-progress-label">MEMUAT SISTEM KANTIN</span>
+          <span class="preloader-percent-counter" id="preloaderCounter">0%</span>
+        </div>
+        
+        <div class="preloader-progress-bar">
+          <div class="preloader-progress-fill" id="preloaderProgressFill">
+            <span class="progress-glow-head"></span>
           </div>
         </div>
-      </div>
 
-      <!-- Brand Typography -->
-      <div class="preloader-brand-text">
-        <h2 class="preloader-title">Kantin SMKN 1 Ciomas<span class="preloader-dot">.</span></h2>
-        <p class="preloader-subtitle">Pusat Jajanan & Kuliner Resmi Siswa SKANIC</p>
-      </div>
-
-      <!-- Modern Glowing Progress Bar -->
-      <div class="preloader-progress-wrapper">
-        <div class="preloader-progress-bar">
-          <div class="preloader-progress-fill"></div>
-        </div>
         <div class="preloader-status-container">
           <ion-icon name="sparkles" class="preloader-status-icon"></ion-icon>
-          <span class="preloader-status-text" id="preloaderStatusText">Menyiapkan seblak, gurilem & aneka es segar...</span>
+          <span class="preloader-status-text" id="preloaderStatusText">Menyiapkan hidangan lezat kantin...</span>
         </div>
       </div>
 
@@ -99,7 +141,10 @@
     <div class="container">
 
       <div class="logo-wrapper">
-        <a href="#home" class="logo">SMKN 1 Ciomas<span class="span">.</span></a>
+        <a href="#home" class="logo header-school-brand">
+          <img src="{{ asset('assets/images/logo-smkn1ciomas.png') }}" alt="Logo SMKN 1 Ciomas" class="header-school-logo">
+          <span>SMKN 1 Ciomas<span class="span">.</span></span>
+        </a>
       </div>
 
       <nav class="navbar modern-navbar" data-navbar>
